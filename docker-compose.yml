@@ -1,0 +1,59 @@
+services:
+    app:
+        build:
+            context: .
+            dockerfile: Dockerfile
+        image: medical_profile:1.0.0
+        container_name: medical_profile_app
+        env_file: ".env"
+        environment:
+            - PYDEVD_DISABLE_FILE_VALIDATION=1
+        restart: unless-stopped
+        command: python -m debugpy --listen 0.0.0.0:5678 -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+        ports:
+            - "8000:8000"
+            - "5678:5678"
+        volumes:
+            - .:/code
+        depends_on:
+            - rabbitmq
+            - db
+        networks:
+            - medical_profile
+
+    db:
+        image: postgres:16.3
+        container_name: medical_profile_db
+        restart: unless-stopped
+        environment:
+            POSTGRES_DB: medical_profile_db
+            POSTGRES_USER: postgres
+            POSTGRES_PASSWORD: postgres
+        volumes:
+            - database:/var/lib/postgresql/data
+        ports:
+            - "5433:5432"
+        expose:
+            - 5433
+        networks:
+            - medical_profile
+
+    rabbitmq:
+        image: rabbitmq:3-management
+        container_name: medical_profile_rabbitmq
+        restart: unless-stopped
+        ports:
+            - "5672:5672"
+            - "15672:15672"
+        environment:
+            RABBITMQ_DEFAULT_USER: guest
+            RABBITMQ_DEFAULT_PASS: guest
+        networks:
+            - medical_profile
+
+networks:
+    medical_profile:
+        driver: bridge
+
+volumes:
+    database:
