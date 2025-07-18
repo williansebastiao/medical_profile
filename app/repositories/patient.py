@@ -1,3 +1,5 @@
+from typing import List
+
 from sqlalchemy import asc, delete, or_, select, update
 from sqlalchemy.exc import IntegrityError, StatementError
 from sqlalchemy.orm import Session
@@ -129,3 +131,21 @@ class PatientRepository:
             return NotFound(message="Unable to delete record")
         except Exception as e:
             raise NotFound(message=str(e)) from e
+
+    async def import_patient(
+        self,
+        payload: List[CreatePatientSchema],
+        session: Session,
+    ) -> bool:
+        try:
+            for item in payload:
+                stmt = self.patient(**item.model_dump())
+                session.add(stmt)
+                session.commit()
+                session.refresh(stmt)
+
+            return True
+        except IntegrityError as e:
+            raise UniqueViolation() from e
+        except Exception as e:
+            raise ValueError(str(e)) from e

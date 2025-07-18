@@ -1,9 +1,11 @@
 from typing import List
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.database import db_session
+from app.exceptions import UniqueViolation
 from app.schemas import CreatePatienResponseSchema, CreatePatientSchema
 from app.services import PatientService
 
@@ -52,11 +54,6 @@ async def find_by_uuid(
             session=session,
         )
         return response
-    except Exception as e:
-        raise HTTPException(
-            detail=str(e),
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        ) from e
     except Exception as e:
         raise HTTPException(
             detail=str(e),
@@ -127,6 +124,30 @@ async def delete(
             session=session,
         )
         return response
+    except Exception as e:
+        raise HTTPException(
+            detail=str(e),
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        ) from e
+
+
+@router.post(
+    "/import",
+    status_code=status.HTTP_201_CREATED,
+)
+async def import_patient(
+    file: UploadFile = File(...),
+    session: Session = Depends(db_session),
+) -> bool:
+    try:
+        service = PatientService()
+        response = await service.import_patient(
+            file=file,
+            session=session,
+        )
+        return response
+    except IntegrityError as e:
+        raise UniqueViolation() from e
     except Exception as e:
         raise HTTPException(
             detail=str(e),
