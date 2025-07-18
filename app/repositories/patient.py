@@ -5,9 +5,20 @@ from sqlalchemy.exc import IntegrityError, StatementError
 from sqlalchemy.orm import Session
 
 from app.core import logger
+from app.enums import (
+    DATA_PERSISTENCE_FINISHED,
+    DELETE_PATIENT_BY_UUID,
+    FIND_ALL_PATIENTS_SERVICE,
+    FIND_PATIENT_BY_UUID,
+    IMPORT_PATIENTS,
+    INITIALIZING_DATA_PERSISTENCE,
+    PATIENT_NOT_FOUND,
+    UNABLE_TO_DELETE_RECORD,
+    UPDATE_PATIENT,
+)
 from app.exceptions import NotFound, UniqueViolation
 from app.models import PatientModel
-from app.schemas import CreatePatientSchema
+from app.schemas import PatientRequestSchema
 
 
 class PatientRepository:
@@ -20,13 +31,13 @@ class PatientRepository:
 
     async def create(
         self,
-        payload: CreatePatientSchema,
+        payload: PatientRequestSchema,
         session: Session,
     ) -> PatientModel:
 
         try:
             logger.info(
-                f"Initializing data persistence: {payload.model_dump()}"
+                f"{INITIALIZING_DATA_PERSISTENCE}: {payload.model_dump()}"
             )
 
             stmt = self.patient(**payload.model_dump())
@@ -34,7 +45,7 @@ class PatientRepository:
             session.commit()
             session.refresh(stmt)
 
-            logger.info(f"Data persistence finished: {payload.model_dump()}")
+            logger.info(f"{DATA_PERSISTENCE_FINISHED} {payload.model_dump()}")
 
             return stmt
         except IntegrityError as e:
@@ -42,20 +53,20 @@ class PatientRepository:
 
     async def find_all(
         self,
-        filter: str,
+        search: str,
         session: Session,
     ) -> PatientModel:
 
-        logger.info(f"Find all user")
+        logger.info(FIND_ALL_PATIENTS_SERVICE)
 
         stmt = select(self.patient)
-        if filter:
+        if search:
             stmt = stmt.where(
                 or_(
-                    self.patient.first_name.like(f"%{filter}%"),
-                    self.patient.last_name.like(f"%{filter}%"),
-                    self.patient.email.like(f"%{filter}%"),
-                    self.patient.cpf.like(f"%{filter}%"),
+                    self.patient.first_name.like(f"%{search}%"),
+                    self.patient.last_name.like(f"%{search}%"),
+                    self.patient.email.like(f"%{search}%"),
+                    self.patient.cpf.like(f"%{search}%"),
                 )
             )
 
@@ -72,7 +83,7 @@ class PatientRepository:
 
         try:
 
-            logger.info(f"Find all user")
+            logger.info(f"{FIND_PATIENT_BY_UUID}: {uuid}")
 
             stmt = select(self.patient).where(self.patient.uuid == uuid)
             response = session.scalars(stmt).one_or_none()
@@ -83,15 +94,16 @@ class PatientRepository:
             return response
 
         except StatementError as e:
-            raise NotFound(message="Patient not found") from e
+            raise NotFound(message=PATIENT_NOT_FOUND) from e
 
     async def update(
         self,
         uuid: str,
-        payload: CreatePatientSchema,
+        payload: PatientRequestSchema,
         session: Session,
     ) -> PatientModel:
 
+        logger.info(f"{UPDATE_PATIENT}: {uuid}")
         stmt = (
             update(self.patient)
             .where(self.patient.uuid == uuid)
@@ -104,7 +116,7 @@ class PatientRepository:
 
         response = execute_query.scalar_one_or_none()
         if not response:
-            raise NotFound(message="Patient not found")
+            raise NotFound(message=PATIENT_NOT_FOUND)
 
         return response
 
@@ -114,12 +126,13 @@ class PatientRepository:
         session: Session,
     ) -> bool:
 
+        logger.info(f"{DELETE_PATIENT_BY_UUID}: {uuid}")
         try:
             search = select(self.patient).where(self.patient.uuid == uuid)
             search_execute = session.scalars(search).one_or_none()
 
             if not search_execute:
-                raise NotFound(message="Patient not found")
+                raise NotFound(message=PATIENT_NOT_FOUND)
 
             stmt = delete(self.patient).where(self.patient.uuid == uuid)
 
@@ -128,15 +141,17 @@ class PatientRepository:
 
             if execute_query.rowcount > 0:
                 return True
-            return NotFound(message="Unable to delete record")
+            return NotFound(message=UNABLE_TO_DELETE_RECORD)
         except Exception as e:
             raise NotFound(message=str(e)) from e
 
     async def import_patient(
         self,
-        payload: List[CreatePatientSchema],
+        payload: List[PatientRequestSchema],
         session: Session,
     ) -> bool:
+
+        logger.info(IMPORT_PATIENTS)
         try:
             for item in payload:
                 stmt = self.patient(**item.model_dump())

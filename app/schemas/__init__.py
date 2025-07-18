@@ -1,6 +1,6 @@
-from .patient import CreatePatienResponseSchema, CreatePatientSchema
+from .patient import PatienResponseSchema, PatientRequestSchema
 
 __all__ = [
-    "CreatePatientSchema",
-    "CreatePatienResponseSchema",
+    "PatientRequestSchema",
+    "PatienResponseSchema",
 ]

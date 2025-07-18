@@ -5,8 +5,16 @@ from fastapi import UploadFile
 from sqlalchemy.orm import Session
 
 from app.core import logger
+from app.enums import (
+    DELETE_PATIENT_BY_UUID,
+    FIND_ALL_PATIENTS_SERVICE,
+    FIND_PATIENT_BY_UUID,
+    IMPORT_PATIENTS,
+    PATIENT_SERVICE_PAYLOAD,
+    UPDATE_PATIENT,
+)
 from app.repositories import PatientRepository
-from app.schemas import CreatePatientSchema
+from app.schemas import PatientRequestSchema
 
 
 class PatientService:
@@ -18,10 +26,10 @@ class PatientService:
 
     async def create(
         self,
-        payload: CreatePatientSchema,
+        payload: PatientRequestSchema,
         session: Session,
     ):
-        logger.info(f"Patient Service payload: {payload.model_dump()}")
+        logger.info(f"{PATIENT_SERVICE_PAYLOAD} {payload.model_dump()}")
         return await self.patient_repository.create(
             payload=payload,
             session=session,
@@ -29,12 +37,12 @@ class PatientService:
 
     async def find_all(
         self,
-        filter: str,
+        search: str,
         session: Session,
     ):
-        logger.info(f"Find all patient service")
+        logger.info(FIND_ALL_PATIENTS_SERVICE)
         return await self.patient_repository.find_all(
-            filter=filter,
+            search=search,
             session=session,
         )
 
@@ -43,7 +51,7 @@ class PatientService:
         uuid: str,
         session: Session,
     ):
-        logger.info(f"Find all patient service")
+        logger.info(FIND_PATIENT_BY_UUID)
         return await self.patient_repository.find_by_uuid(
             uuid=uuid,
             session=session,
@@ -52,10 +60,10 @@ class PatientService:
     async def update(
         self,
         uuid: str,
-        payload: CreatePatientSchema,
+        payload: PatientRequestSchema,
         session: Session,
     ):
-        logger.info(f"Find all patient service")
+        logger.info(f"{UPDATE_PATIENT} {payload.model_dump()}")
         return await self.patient_repository.update(
             uuid=uuid,
             payload=payload,
@@ -67,7 +75,7 @@ class PatientService:
         uuid: str,
         session: Session,
     ):
-        logger.info(f"Find all patient service")
+        logger.info(DELETE_PATIENT_BY_UUID)
         return await self.patient_repository.delete(
             uuid=uuid,
             session=session,
@@ -78,8 +86,7 @@ class PatientService:
         file: UploadFile,
         session: Session,
     ) -> bool:
-        logger.info(f"Find all patient service")
-        print("\n\n")
+        logger.info(IMPORT_PATIENTS)
         contents = await file.read()
         decoded = contents.decode("utf-8")
         csv_file = pd.read_csv(StringIO(decoded))
@@ -101,7 +108,7 @@ class PatientService:
             seek_patients_duplicate.add(row_key)
 
             patients.append(
-                CreatePatientSchema(
+                PatientRequestSchema(
                     first_name=row["first_name"],
                     last_name=row["last_name"],
                     email=row["email"],

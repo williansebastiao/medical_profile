@@ -3,7 +3,7 @@ import re
 from pydantic import BaseModel, EmailStr, field_validator
 
 
-class CreatePatientSchema(BaseModel):
+class PatientRequestSchema(BaseModel):
     first_name: str
     last_name: str
     email: EmailStr
@@ -16,7 +16,7 @@ class CreatePatientSchema(BaseModel):
         return re.sub(r"\D", "", value)
 
 
-class CreatePatienResponseSchema(BaseModel):
+class PatienResponseSchema(BaseModel):
     uuid: str
     first_name: str
     last_name: str

@@ -3,4 +3,9 @@ max-line-length = 79
 exclude = .git,
     __pycache__,
     migrations/*,
-ignore = E203, E266, E501, E704, W503
+ignore = E203,
+    E266,
+    E501,
+    E704,
+    F821,
+    W503

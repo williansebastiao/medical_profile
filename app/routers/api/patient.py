@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 
 from app.database import db_session
 from app.exceptions import UniqueViolation
-from app.schemas import CreatePatienResponseSchema, CreatePatientSchema
+from app.schemas import PatienResponseSchema, PatientRequestSchema
 from app.services import PatientService
 
 router = APIRouter(
@@ -18,16 +18,16 @@ router = APIRouter(
 @router.get(
     "/",
     status_code=status.HTTP_200_OK,
-    response_model=List[CreatePatienResponseSchema],
+    response_model=List[PatienResponseSchema],
 )
 async def find_all(
-    filter: str = None,
+    search: str = None,
     session: Session = Depends(db_session),
-) -> List[CreatePatienResponseSchema]:
+) -> List[PatienResponseSchema]:
     try:
         service = PatientService()
         response = await service.find_all(
-            filter=filter,
+            search=search,
             session=session,
         )
         return response
@@ -40,13 +40,13 @@ async def find_all(
 
 @router.get(
     "/{uuid}",
-    response_model=CreatePatienResponseSchema,
+    response_model=PatienResponseSchema,
     status_code=status.HTTP_200_OK,
 )
 async def find_by_uuid(
     uuid: str,
     session: Session = Depends(db_session),
-) -> CreatePatienResponseSchema:
+) -> PatienResponseSchema:
     try:
         service = PatientService()
         response = await service.find_by_uuid(
@@ -64,12 +64,12 @@ async def find_by_uuid(
 @router.post(
     "",
     status_code=status.HTTP_201_CREATED,
-    response_model=CreatePatienResponseSchema,
+    response_model=PatienResponseSchema,
 )
 async def create(
-    payload: CreatePatientSchema,
+    payload: PatientRequestSchema,
     session: Session = Depends(db_session),
-) -> CreatePatienResponseSchema:
+) -> PatienResponseSchema:
     try:
         service = PatientService()
         response = await service.create(
@@ -86,14 +86,14 @@ async def create(
 
 @router.put(
     "/{uuid}",
-    response_model=CreatePatienResponseSchema,
+    response_model=PatienResponseSchema,
     status_code=status.HTTP_200_OK,
 )
 async def update(
     uuid: str,
-    payload: CreatePatientSchema,
+    payload: PatientRequestSchema,
     session: Session = Depends(db_session),
-) -> CreatePatienResponseSchema:
+) -> PatienResponseSchema:
     try:
         service = PatientService()
         response = await service.update(

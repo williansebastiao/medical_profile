@@ -4,12 +4,13 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.core import logger, settings
+from app.enums import LIFESPAN_STARTED
 from app.routers.api import router
 
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
-    logger.info("lifespan started")
+    logger.info(LIFESPAN_STARTED)
     yield
 
 

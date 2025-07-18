@@ -18,4 +18,4 @@ class MedicalRecordModel(BaseModel):
     )
 
     def __repr__(self):
-        return f"User(uuid={self.uuid}, first_name={self.first_name}, last_name={self.last_name})"
+        return f"MedicalRecord(uuid={self.uuid}, patient_uuid={self.patient_uuid})"
