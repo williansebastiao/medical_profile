@@ -14,16 +14,18 @@ router = APIRouter(
 
 
 @router.get(
-    "",
+    "/",
     status_code=status.HTTP_200_OK,
     response_model=List[CreatePatienResponseSchema],
 )
 async def find_all(
+    filter: str = None,
     session: Session = Depends(db_session),
 ) -> List[CreatePatienResponseSchema]:
     try:
         service = PatientService()
         response = await service.find_all(
+            filter=filter,
             session=session,
         )
         return response

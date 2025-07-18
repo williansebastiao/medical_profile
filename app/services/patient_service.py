@@ -25,10 +25,14 @@ class PatientService:
 
     async def find_all(
         self,
+        filter: str,
         session: Session,
     ):
         logger.info(f"Find all patient service")
-        return await self.patient_repository.find_all(session=session)
+        return await self.patient_repository.find_all(
+            filter=filter,
+            session=session,
+        )
 
     async def find_by_uuid(
         self,

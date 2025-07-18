@@ -1,4 +1,4 @@
-from sqlalchemy import asc, delete, select, update
+from sqlalchemy import asc, delete, or_, select, update
 from sqlalchemy.exc import IntegrityError, StatementError
 from sqlalchemy.orm import Session
 
@@ -40,12 +40,24 @@ class PatientRepository:
 
     async def find_all(
         self,
+        filter: str,
         session: Session,
     ) -> PatientModel:
 
         logger.info(f"Find all user")
 
-        stmt = select(self.patient).order_by(asc(self.patient.first_name))
+        stmt = select(self.patient)
+        if filter:
+            stmt = stmt.where(
+                or_(
+                    self.patient.first_name.like(f"%{filter}%"),
+                    self.patient.last_name.like(f"%{filter}%"),
+                    self.patient.email.like(f"%{filter}%"),
+                    self.patient.cpf.like(f"%{filter}%"),
+                )
+            )
+
+        stmt = stmt.order_by(asc(self.patient.first_name))
         response = session.scalars(stmt).all()
 
         return response
