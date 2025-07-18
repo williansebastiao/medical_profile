@@ -9,7 +9,7 @@ router = APIRouter()
     tags=["Health"],
     status_code=status.HTTP_200_OK,
 )
-async def index():
+async def index() -> JSONResponse:
     return JSONResponse(
         status_code=status.HTTP_200_OK,
         content={"message": "Ok"},
