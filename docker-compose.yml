@@ -56,8 +56,9 @@ services:
 
     datadog:
         image: datadog/agent:latest
+        env_file: ".env"
         environment:
-            - DD_API_KEY=368a5f9c8ed403a8b303dd8b42321de6d68ffffc
+        - DD_API_KEY=${DD_API_KEY}
             - DD_SITE=datadoghq.com
             - DD_LOGS_ENABLED=true
             - DD_LOGS_CONFIG_CONTAINER_COLLECT_ALL=true
