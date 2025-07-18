@@ -16,10 +16,13 @@ services:
         volumes:
             - .:/code
         depends_on:
+            - datadog
             - rabbitmq
             - db
         networks:
             - medical_profile
+        labels:
+            com.datadoghq.ad.logs: '[{"source":"python", "service":"medical_profile"}]'
 
     db:
         image: postgres:16.3
@@ -48,6 +51,20 @@ services:
         environment:
             RABBITMQ_DEFAULT_USER: guest
             RABBITMQ_DEFAULT_PASS: guest
+        networks:
+            - medical_profile
+
+    datadog:
+        image: datadog/agent:latest
+        environment:
+            - DD_API_KEY=368a5f9c8ed403a8b303dd8b42321de6d68ffffc
+            - DD_SITE=datadoghq.com
+            - DD_LOGS_ENABLED=true
+            - DD_LOGS_CONFIG_CONTAINER_COLLECT_ALL=true
+        volumes:
+            - /var/run/docker.sock:/var/run/docker.sock:ro
+            - /proc/:/host/proc/:ro
+            - /sys/fs/cgroup:/host/sys/fs/cgroup:ro
         networks:
             - medical_profile
 
